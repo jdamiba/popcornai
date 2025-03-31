@@ -93,123 +93,252 @@ export default function SearchPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-8 py-8">
+    <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      <div className="max-w-7xl mx-auto px-8 py-12">
         <div className="mb-8">
-          <Link href="/" className="text-blue-600 hover:text-blue-800">
-            ← Back to Home
+          <Link
+            href="/"
+            className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Home
           </Link>
         </div>
 
-        <h1 className="text-3xl text-black font-bold mb-8">
-          Find Movies Based on Your Resume
-        </h1>
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4 text-center">
+            Find Movies Based on Your Resume
+          </h1>
+          <p className="text-gray-300 text-center mb-8">
+            Paste your resume below and discover movies that match your
+            professional journey
+          </p>
 
-        <form onSubmit={handleSearch} className="mb-8">
-          <div className="mb-4">
-            <label htmlFor="query" className="block text-sm font-medium mb-2">
-              Paste your resume here:
-            </label>
-            <textarea
-              id="query"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="text-black w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Copy and paste your resume text here to find movies that match your professional journey..."
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading || !query.trim()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {loading ? "Searching..." : "Find Similar Movies"}
-          </button>
-        </form>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-
-        {results.length > 0 ? (
-          <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {results.map((result) => (
-                <div
-                  key={result.id}
-                  className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col"
-                >
-                  <div className="relative h-[300px] w-full">
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w500${result.tmdb?.poster_path}`}
-                      alt={result.payload.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                  <div className="p-4 flex flex-col flex-grow">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-xl text-black font-medium">
-                        {result.payload.title || "Untitled Movie"}
-                      </h3>
-                      {result.tmdb?.external_ids?.imdb_id && (
-                        <a
-                          href={`https://www.imdb.com/title/${result.tmdb.external_ids.imdb_id}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          IMDB
-                        </a>
-                      )}
-                    </div>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <p>Director: {result.payload.director}</p>
-                      <p>Release Year: {result.payload.release_year}</p>
-                      {result.tmdb?.genres && result.tmdb.genres.length > 0 && (
-                        <p className="flex flex-wrap gap-1">
-                          <span className="font-medium">Genres:</span>
-                          {result.tmdb.genres.map((genre, index) => (
-                            <span
-                              key={index}
-                              className="bg-gray-100 px-2 py-0.5 rounded-full text-xs"
-                            >
-                              {genre}
-                            </span>
-                          ))}
-                        </p>
-                      )}
-                      {result.tmdb?.vote_average && (
-                        <p>
-                          Rating: {result.tmdb.vote_average.toFixed(1)}/10 (
-                          {result.tmdb.vote_count} votes)
-                        </p>
-                      )}
-                    </div>
-                    <div className="mt-3 flex-grow">
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        {result.tmdb?.overview}
-                      </p>
-                    </div>
-                    <div className="mt-4 pt-3 border-t">
-                      <p className="text-sm text-blue-600">
-                        Similarity Score: {(result.score * 100).toFixed(2)}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          <form onSubmit={handleSearch} className="mb-12">
+            <div className="mb-6">
+              <label
+                htmlFor="query"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
+                Your Resume
+              </label>
+              <textarea
+                id="query"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full h-40 p-4 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                placeholder="Copy and paste your resume text here to find movies that match your professional journey..."
+              />
             </div>
-          </div>
-        ) : !loading && !error && query.trim() ? (
-          <div className="text-gray-500 text-center py-4">
-            No similar movies found. Try adjusting your resume text or try a
-            different search.
-          </div>
-        ) : null}
+            <button
+              type="submit"
+              disabled={loading || !query.trim()}
+              className="w-full bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Analyzing Your Resume...
+                </span>
+              ) : (
+                "Find Similar Movies"
+              )}
+            </button>
+          </form>
+
+          {error && (
+            <div className="bg-red-900/50 border border-red-500 text-red-200 px-6 py-4 rounded-lg mb-8">
+              {error}
+            </div>
+          )}
+
+          {results.length > 0 ? (
+            <div>
+              <h2 className="text-2xl font-semibold mb-6 text-center">
+                Recommended Movies
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {results.map((result) => (
+                  <div
+                    key={result.id}
+                    className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  >
+                    <div className="relative h-[400px] w-full">
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w500${result.tmdb?.poster_path}`}
+                        alt={result.payload.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-semibold text-white">
+                          {result.payload.title || "Untitled Movie"}
+                        </h3>
+                        {result.tmdb?.external_ids?.imdb_id && (
+                          <a
+                            href={`https://www.imdb.com/title/${result.tmdb.external_ids.imdb_id}/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            <span className="flex items-center">
+                              <svg
+                                className="w-4 h-4 mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
+                              </svg>
+                              IMDB
+                            </span>
+                          </a>
+                        )}
+                      </div>
+                      <div className="space-y-3 text-sm text-gray-300">
+                        <p className="flex items-center">
+                          <svg
+                            className="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                            />
+                          </svg>
+                          {result.payload.director}
+                        </p>
+                        <p className="flex items-center">
+                          <svg
+                            className="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                            />
+                          </svg>
+                          {result.payload.release_year}
+                        </p>
+                        {result.tmdb?.genres &&
+                          result.tmdb.genres.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {result.tmdb.genres.map((genre, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-gray-700 px-3 py-1 rounded-full text-xs text-gray-300"
+                                >
+                                  {genre}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        {result.tmdb?.vote_average && (
+                          <p className="flex items-center">
+                            <svg
+                              className="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                              />
+                            </svg>
+                            {result.tmdb.vote_average.toFixed(1)}/10 (
+                            {result.tmdb.vote_count} votes)
+                          </p>
+                        )}
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-700">
+                        <p className="text-sm text-gray-400 leading-relaxed">
+                          {result.tmdb?.overview}
+                        </p>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-700">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-400">
+                            Match Score
+                          </span>
+                          <span className="text-sm font-semibold text-blue-400">
+                            {(result.score * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : !loading && !error && query.trim() ? (
+            <div className="text-center py-12">
+              <div className="bg-gray-800 rounded-lg p-8 max-w-md mx-auto">
+                <svg
+                  className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <h3 className="text-xl font-semibold mb-2">No Movies Found</h3>
+                <p className="text-gray-400">
+                  Try adjusting your resume text or try a different search.
+                  We're looking for the perfect match!
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
     </main>
   );
