@@ -93,12 +93,13 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Movie Plot Similarity Search</h1>
+      <h1 className="text-3xl font-bold mb-8">Popcorn.AI</h1>
+      <p>Find movies based on your resume using vector search</p>
 
       <form onSubmit={handleSearch} className="mb-8">
         <div className="mb-4">
           <label htmlFor="query" className="block text-sm font-medium mb-2">
-            Enter your search query:
+            Enter your resume:
           </label>
           <textarea
             id="query"
