@@ -1,0 +1,216 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+
+interface TMDBMovieDetails {
+  poster_path: string | null;
+  overview: string;
+  vote_average: number;
+  vote_count: number;
+  release_date: string;
+  external_ids?: {
+    imdb_id?: string;
+  };
+  genres?: string[];
+}
+
+interface MoviePayload {
+  title: string;
+  director: string;
+  release_year: number;
+  plot: string;
+}
+
+interface SearchResult {
+  id: string;
+  score: number;
+  payload: MoviePayload;
+  tmdb?: TMDBMovieDetails;
+}
+
+export default function SearchPage() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setResults([]); // Clear previous results
+
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Search failed");
+      }
+
+      const data = await response.json();
+
+      if (!data.result || !Array.isArray(data.result)) {
+        throw new Error("Invalid response format");
+      }
+
+      // Filter results to only include those with both poster and overview
+      // and remove duplicates based on title
+      const filteredResults = data.result
+        .filter(
+          (result: SearchResult) =>
+            result.tmdb?.poster_path && result.tmdb?.overview
+        )
+        .reduce((unique: SearchResult[], result: SearchResult) => {
+          const title = result.payload.title.toLowerCase();
+          if (
+            !unique.some((item) => item.payload.title.toLowerCase() === title)
+          ) {
+            unique.push(result);
+          }
+          return unique;
+        }, []);
+
+      setResults(filteredResults);
+    } catch (err: unknown) {
+      console.error("Search error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while searching for movies. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        <div className="mb-8">
+          <Link href="/" className="text-blue-600 hover:text-blue-800">
+            ← Back to Home
+          </Link>
+        </div>
+
+        <h1 className="text-3xl text-black font-bold mb-8">
+          Find Movies Based on Your Resume
+        </h1>
+
+        <form onSubmit={handleSearch} className="mb-8">
+          <div className="mb-4">
+            <label htmlFor="query" className="block text-sm font-medium mb-2">
+              Paste your resume here:
+            </label>
+            <textarea
+              id="query"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="text-black w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Copy and paste your resume text here to find movies that match your professional journey..."
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || !query.trim()}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {loading ? "Searching..." : "Find Similar Movies"}
+          </button>
+        </form>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        {results.length > 0 ? (
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {results.map((result) => (
+                <div
+                  key={result.id}
+                  className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col"
+                >
+                  <div className="relative h-[300px] w-full">
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w500${result.tmdb?.poster_path}`}
+                      alt={result.payload.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col flex-grow">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl text-black font-medium">
+                        {result.payload.title || "Untitled Movie"}
+                      </h3>
+                      {result.tmdb?.external_ids?.imdb_id && (
+                        <a
+                          href={`https://www.imdb.com/title/${result.tmdb.external_ids.imdb_id}/`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          IMDB
+                        </a>
+                      )}
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>Director: {result.payload.director}</p>
+                      <p>Release Year: {result.payload.release_year}</p>
+                      {result.tmdb?.genres && result.tmdb.genres.length > 0 && (
+                        <p className="flex flex-wrap gap-1">
+                          <span className="font-medium">Genres:</span>
+                          {result.tmdb.genres.map((genre, index) => (
+                            <span
+                              key={index}
+                              className="bg-gray-100 px-2 py-0.5 rounded-full text-xs"
+                            >
+                              {genre}
+                            </span>
+                          ))}
+                        </p>
+                      )}
+                      {result.tmdb?.vote_average && (
+                        <p>
+                          Rating: {result.tmdb.vote_average.toFixed(1)}/10 (
+                          {result.tmdb.vote_count} votes)
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-3 flex-grow">
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {result.tmdb?.overview}
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t">
+                      <p className="text-sm text-blue-600">
+                        Similarity Score: {(result.score * 100).toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : !loading && !error && query.trim() ? (
+          <div className="text-gray-500 text-center py-4">
+            No similar movies found. Try adjusting your resume text or try a
+            different search.
+          </div>
+        ) : null}
+      </div>
+    </main>
+  );
+}
