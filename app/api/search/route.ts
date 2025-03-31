@@ -1,26 +1,57 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
-import { pipeline } from "@xenova/transformers";
+import { pipeline, FeatureExtractionPipeline } from "@xenova/transformers";
 
 const QDRANT_URL = process.env.QDRANT_URL;
 const QDRANT_API_KEY = process.env.QDRANT_API_KEY;
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
-// Initialize text embedder
-let textEmbedder: any = null;
+interface TMDBGenre {
+  id: number;
+  name: string;
+}
 
-async function getTextEmbedder() {
+interface TMDBMovieDetails {
+  poster_path: string | null;
+  overview: string;
+  vote_average: number;
+  vote_count: number;
+  release_date: string;
+  external_ids?: {
+    imdb_id?: string;
+  };
+  genres?: string[];
+}
+
+interface MoviePayload {
+  title: string;
+  director: string;
+  release_year: number;
+  plot: string;
+}
+
+interface QdrantResult {
+  id: string;
+  score: number;
+  payload: MoviePayload;
+  tmdb?: TMDBMovieDetails;
+}
+
+// Initialize text embedder
+let textEmbedder: FeatureExtractionPipeline | null = null;
+
+async function getTextEmbedder(): Promise<FeatureExtractionPipeline> {
   if (!textEmbedder) {
-    textEmbedder = await pipeline(
+    textEmbedder = (await pipeline(
       "feature-extraction",
       "Xenova/all-MiniLM-L6-v2"
-    );
+    )) as FeatureExtractionPipeline;
   }
   return textEmbedder;
 }
 
-async function getTextEmbedding(text: string) {
+async function getTextEmbedding(text: string): Promise<number[]> {
   const embedder = await getTextEmbedder();
   const output = await embedder(text, {
     pooling: "mean",
@@ -29,7 +60,10 @@ async function getTextEmbedding(text: string) {
   return Array.from(output.data);
 }
 
-async function getTMDBMovieDetails(title: string, year: number) {
+async function getTMDBMovieDetails(
+  title: string,
+  year: number
+): Promise<TMDBMovieDetails | null> {
   try {
     // Search for the movie
     const searchResponse = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
@@ -60,9 +94,12 @@ async function getTMDBMovieDetails(title: string, year: number) {
         vote_average: detailsResponse.data.vote_average,
         vote_count: detailsResponse.data.vote_count,
         release_date: detailsResponse.data.release_date,
-        imdb_id: detailsResponse.data.external_ids?.imdb_id,
+        external_ids: {
+          imdb_id: detailsResponse.data.external_ids?.imdb_id,
+        },
         genres:
-          detailsResponse.data.genres?.map((genre: any) => genre.name) || [],
+          detailsResponse.data.genres?.map((genre: TMDBGenre) => genre.name) ||
+          [],
       };
     }
     return null;
@@ -104,7 +141,7 @@ export async function POST(request: Request) {
 
     // Fetch additional details from TMDB for each movie
     const enhancedResults = await Promise.all(
-      response.data.result.map(async (result: any) => {
+      response.data.result.map(async (result: QdrantResult) => {
         const tmdbDetails = await getTMDBMovieDetails(
           result.payload.title,
           result.payload.release_year
@@ -120,11 +157,17 @@ export async function POST(request: Request) {
       ...response.data,
       result: enhancedResults,
     });
-  } catch (error: any) {
-    console.error("Search error:", error.response?.data || error);
+  } catch (error: unknown) {
+    console.error(
+      "Search error:",
+      error instanceof Error ? error.message : error
+    );
     return NextResponse.json(
-      { error: error.response?.data?.error || "Failed to perform search" },
-      { status: error.response?.status || 500 }
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to perform search",
+      },
+      { status: 500 }
     );
   }
 }

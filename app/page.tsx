@@ -3,9 +3,35 @@
 import { useState } from "react";
 import Image from "next/image";
 
+interface TMDBMovieDetails {
+  poster_path: string | null;
+  overview: string;
+  vote_average: number;
+  vote_count: number;
+  release_date: string;
+  external_ids?: {
+    imdb_id?: string;
+  };
+  genres?: string[];
+}
+
+interface MoviePayload {
+  title: string;
+  director: string;
+  release_year: number;
+  plot: string;
+}
+
+interface SearchResult {
+  id: string;
+  score: number;
+  payload: MoviePayload;
+  tmdb?: TMDBMovieDetails;
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,9 +65,10 @@ export default function Home() {
       // and remove duplicates based on title
       const filteredResults = data.result
         .filter(
-          (result: any) => result.tmdb?.poster_path && result.tmdb?.overview
+          (result: SearchResult) =>
+            result.tmdb?.poster_path && result.tmdb?.overview
         )
-        .reduce((unique: any[], result: any) => {
+        .reduce((unique: SearchResult[], result: SearchResult) => {
           const title = result.payload.title.toLowerCase();
           if (
             !unique.some((item) => item.payload.title.toLowerCase() === title)
@@ -52,11 +79,12 @@ export default function Home() {
         }, []);
 
       setResults(filteredResults);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Search error:", err);
       setError(
-        err.message ||
-          "An error occurred while searching for movies. Please try again."
+        err instanceof Error
+          ? err.message
+          : "An error occurred while searching for movies. Please try again."
       );
     } finally {
       setLoading(false);
@@ -106,7 +134,7 @@ export default function Home() {
               >
                 <div className="relative h-[300px] w-full">
                   <Image
-                    src={`https://image.tmdb.org/t/p/w500${result.tmdb.poster_path}`}
+                    src={`https://image.tmdb.org/t/p/w500${result.tmdb?.poster_path}`}
                     alt={result.payload.title}
                     fill
                     className="object-cover"
@@ -118,9 +146,9 @@ export default function Home() {
                     <h3 className="text-xl text-black font-medium">
                       {result.payload.title || "Untitled Movie"}
                     </h3>
-                    {result.tmdb?.imdb_id && (
+                    {result.tmdb?.external_ids?.imdb_id && (
                       <a
-                        href={`https://www.imdb.com/title/${result.tmdb.imdb_id}/`}
+                        href={`https://www.imdb.com/title/${result.tmdb.external_ids.imdb_id}/`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 text-sm"
@@ -135,16 +163,14 @@ export default function Home() {
                     {result.tmdb?.genres && result.tmdb.genres.length > 0 && (
                       <p className="flex flex-wrap gap-1">
                         <span className="font-medium">Genres:</span>
-                        {result.tmdb.genres.map(
-                          (genre: string, index: number) => (
-                            <span
-                              key={index}
-                              className="bg-gray-100 px-2 py-0.5 rounded-full text-xs"
-                            >
-                              {genre}
-                            </span>
-                          )
-                        )}
+                        {result.tmdb.genres.map((genre, index) => (
+                          <span
+                            key={index}
+                            className="bg-gray-100 px-2 py-0.5 rounded-full text-xs"
+                          >
+                            {genre}
+                          </span>
+                        ))}
                       </p>
                     )}
                     {result.tmdb?.vote_average && (
@@ -156,7 +182,7 @@ export default function Home() {
                   </div>
                   <div className="mt-3 flex-grow">
                     <p className="text-sm text-gray-700 leading-relaxed">
-                      {result.tmdb.overview}
+                      {result.tmdb?.overview}
                     </p>
                   </div>
                   <div className="mt-4 pt-3 border-t">
