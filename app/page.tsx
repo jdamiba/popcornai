@@ -63,8 +63,6 @@ export default function Home() {
     }
   };
 
-  console.log(results);
-
   return (
     <main className="min-h-screen p-8 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">Movie Plot Similarity Search</h1>
@@ -134,6 +132,21 @@ export default function Home() {
                   <div className="space-y-2 text-sm text-gray-600">
                     <p>Director: {result.payload.director}</p>
                     <p>Release Year: {result.payload.release_year}</p>
+                    {result.tmdb?.genres && result.tmdb.genres.length > 0 && (
+                      <p className="flex flex-wrap gap-1">
+                        <span className="font-medium">Genres:</span>
+                        {result.tmdb.genres.map(
+                          (genre: string, index: number) => (
+                            <span
+                              key={index}
+                              className="bg-gray-100 px-2 py-0.5 rounded-full text-xs"
+                            >
+                              {genre}
+                            </span>
+                          )
+                        )}
+                      </p>
+                    )}
                     {result.tmdb?.vote_average && (
                       <p>
                         Rating: {result.tmdb.vote_average.toFixed(1)}/10 (

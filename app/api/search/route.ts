@@ -61,6 +61,8 @@ async function getTMDBMovieDetails(title: string, year: number) {
         vote_count: detailsResponse.data.vote_count,
         release_date: detailsResponse.data.release_date,
         imdb_id: detailsResponse.data.external_ids?.imdb_id,
+        genres:
+          detailsResponse.data.genres?.map((genre: any) => genre.name) || [],
       };
     }
     return null;
@@ -81,13 +83,17 @@ export async function POST(request: Request) {
     // Get text embedding
     const vector = await getTextEmbedding(query);
 
+    // Prepare search parameters
+    const searchParams = {
+      vector: vector,
+      limit: 20,
+      with_payload: true,
+      score_threshold: 0.0,
+    };
+
     const response = await axios.post(
       `${QDRANT_URL}/collections/movie_plots/points/search`,
-      {
-        vector,
-        limit: 50,
-        with_payload: true,
-      },
+      searchParams,
       {
         headers: {
           "api-key": QDRANT_API_KEY,
@@ -114,11 +120,11 @@ export async function POST(request: Request) {
       ...response.data,
       result: enhancedResults,
     });
-  } catch (error) {
-    console.error("Search error:", error);
+  } catch (error: any) {
+    console.error("Search error:", error.response?.data || error);
     return NextResponse.json(
-      { error: "Failed to perform search" },
-      { status: 500 }
+      { error: error.response?.data?.error || "Failed to perform search" },
+      { status: error.response?.status || 500 }
     );
   }
 }
