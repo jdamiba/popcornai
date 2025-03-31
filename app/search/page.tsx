@@ -333,7 +333,7 @@ export default function SearchPage() {
                 <h3 className="text-xl font-semibold mb-2">No Movies Found</h3>
                 <p className="text-gray-400">
                   Try adjusting your resume text or try a different search.
-                  We're looking for the perfect match!
+                  We&apos;re looking for the perfect match!
                 </p>
               </div>
             </div>
