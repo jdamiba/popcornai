@@ -33,9 +33,9 @@ export default function Home() {
               Smart Movie Discovery
             </h3>
             <p className="text-gray-300">
-              Find movies that resonate with your career path, whether it's
-              about leadership, innovation, or specific industries you've worked
-              in.
+              Find movies that resonate with your career path, whether
+              it`&apos;s about leadership, innovation, or specific industries
+              you`&apos;ve worked in.
             </p>
           </div>
           <div className="bg-gray-800 p-6 rounded-lg">
