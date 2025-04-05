@@ -184,7 +184,7 @@ export default function Home() {
                 understand your professional experience, skills, and
                 achievements. By converting text into high-dimensional vectors,
                 we can find movies that resonate with your career journey in
-                ways that simple keyword matching can't.
+                ways that simple keyword matching can&apos;t.
               </p>
               <Link
                 href="/search"
@@ -225,7 +225,7 @@ export default function Home() {
                     className="object-cover"
                     sizes="200px"
                     priority
-                  />{" "}
+                  />
                 </div>
               </div>
             </div>
@@ -235,9 +235,9 @@ export default function Home() {
               </h2>
               <p className="text-gray-300 text-lg mb-6">
                 Our vector search technology finds movies that align with your
-                professional journey while introducing unexpected elements. It's
-                like having a friend who knows exactly what you need to watch
-                next based on your career experiences.
+                professional journey while introducing unexpected elements.
+                It&apos;s like having a friend who knows exactly what you need
+                to watch next based on your career experiences.
               </p>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-center">
